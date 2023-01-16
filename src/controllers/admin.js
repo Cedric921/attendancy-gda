@@ -1,3 +1,6 @@
+/* eslint-disable eqeqeq */
+/* eslint-disable no-continue */
+/* eslint-disable object-curly-newline */
 /* eslint-disable no-nested-ternary */
 /* eslint-disable no-restricted-globals */
 /* eslint-disable guard-for-in */
@@ -15,15 +18,23 @@ const STUDENT_PER_PAGE = 9;
 export async function getIndex(req, res, next) {
     const userId = req.user.id;
     const { role } = req.user;
+    const today = new Date();
     try {
-        const presencesToday = await Presence.findAll({
-            attributes: [
-                "presence",
-                [sequelize.fn("COUNT", sequelize.col("presence")), "total"],
-            ],
-            where: { createdAt: date }, // i make here great than
-            group: "presence",
-        });
+        const presencesToday = (
+            await Presence.findAll({
+                attributes: [
+                    "presence",
+                    "isMatin",
+                    [sequelize.fn("COUNT", sequelize.col("presence")), "total"],
+                ],
+                where: sequelize.where(
+                    sequelize.fn("date", sequelize.col("createdAt")),
+                    "=",
+                    today
+                ),
+                group: ["presence", "isMatin"],
+            })
+        ).map((ele) => ele.dataValues);
         const allPresences = (
             await Presence.findAll({
                 attributes: [
@@ -35,7 +46,7 @@ export async function getIndex(req, res, next) {
                 order: ["presence"],
             })
         ).map((ele) => ele.dataValues);
-        return res.render("admin/index", {
+        return res.render("myaccount/index", {
             presencesToday,
             date,
             allPresences,
@@ -58,10 +69,10 @@ export async function getAddStudent(req, res, next) {
         const userId = req.user.id;
 
         if (req.user.role !== 1 && req.user.role !== 2) {
-            return res.redirect("/admin/students");
+            return res.redirect("/myaccount/students/all");
         }
 
-        res.render("admin/add-student", {
+        res.render("myaccount/add-student", {
             userId,
             title: "Nouvel étudiant",
             cohortes,
@@ -76,7 +87,7 @@ export async function getAddStudent(req, res, next) {
 
 // eslint-disable-next-line consistent-return
 export async function getStudents(req, res, next) {
-    const role = req.user || null;
+    const { role } = req.user || null;
 
     const page = +req.query.page || 1;
     const isAuth = (req.user.role === 1 || req.user.role === 2) ?? false;
@@ -85,13 +96,13 @@ export async function getStudents(req, res, next) {
 
     try {
         const students = await Student.findAll({
-            order: [["id", "ASC"]],
             limit: STUDENT_PER_PAGE,
             offset,
         });
 
         const totalStudents = (await Student.findAndCountAll()).count;
-        res.render("admin/students", {
+
+        res.render("myaccount/students", {
             userId,
             role,
             students,
@@ -104,6 +115,7 @@ export async function getStudents(req, res, next) {
             previousPage: page - 1,
             isAuth,
             lastPage: Math.ceil(totalStudents / STUDENT_PER_PAGE),
+            toast: req.flash("toast")[0]
         });
     } catch (error) {
         const err = new Error(error);
@@ -118,7 +130,7 @@ export async function getSingleStudent(req, res, next) {
 
     const studentId = req.params.id;
     const isAuth = (req.user.role === 1 || req.user.role === 2) ?? false;
-    if (isNaN(studentId)) return res.redirect("/not-found");
+    if (!studentId) return res.redirect("/not-found");
     try {
         const student = await Student.findOne({
             where: { id: studentId },
@@ -137,7 +149,7 @@ export async function getSingleStudent(req, res, next) {
             })
         ).map((element) => element.dataValues);
 
-        res.render("admin/one-student", {
+        res.render("myaccount/one-student", {
             isAuth,
             userId,
             student,
@@ -156,13 +168,14 @@ export async function postAddStudent(req, res, next) {
     const { nom, prenom, email, cohorteId } = req.body;
 
     const userId = req.user.id || null;
+    const { role } = req.user
 
-    if (req.user.role !== 1 && req.user.role !== 2) {
-        return res.redirect("/admin/students");
+    // only super admin or admin can add a student
+    if (role !== 1 && role !== 2) {
+        return res.redirect("/myaccount/students/all");
     }
 
     try {
-        const { role } = req.user;
         await Student.create({
             nom,
             prenom,
@@ -172,7 +185,13 @@ export async function postAddStudent(req, res, next) {
             role,
         });
 
-        res.redirect("/admin/students");
+        req.flash("toast", {
+            message: `L'étudiant ${prenom} ${nom} est ajouté avec succès`,
+            severity: "success",
+        });
+
+        res.redirect("/myaccount/students/all");
+
     } catch (error) {
         const err = new Error(error);
         err.httpStatusCode = 500;
@@ -181,8 +200,9 @@ export async function postAddStudent(req, res, next) {
 }
 
 export async function postEditStudent(req, res, next) {
+    // TODO create a helper function to check authorization 
     if (req.user.role !== 1 && req.user.role !== 2) {
-        return res.redirect("admin/students");
+        return res.redirect("myaccount/students");
     }
     const { noms, email, studentId } = req.body;
     try {
@@ -191,7 +211,7 @@ export async function postEditStudent(req, res, next) {
             email,
             studentId,
         ]);
-        res.redirect(`/admin/students/${studentId}`);
+        res.redirect(`/myaccount/students/${studentId}`);
     } catch (error) {
         const err = new Error(error);
         err.httpStatusCode = 500;
@@ -202,13 +222,14 @@ export async function postEditStudent(req, res, next) {
 export async function postDeleleStudent(req, res, next) {
     try {
         if (req.user.role !== 1 && req.user.role !== 2) {
-            return res.redirect("admin/students");
+            return res.redirect("myaccount/students/all");
         }
         const { studentId } = req.body;
 
         const student = await Student.findOne({ where: { id: studentId } });
         await student.destroy();
-        res.redirect("/admin/students");
+
+        res.redirect("/myaccount/students/all");
     } catch (error) {
         const err = new Error(error);
         err.httpStatusCode = 500;
@@ -223,10 +244,10 @@ export async function getAddPresence(req, res, next) {
 
         const students = await Student.findAll({});
 
-        res.render("admin/add-presence", {
+        res.render("myaccount/add-presence", {
             userId,
             students,
-            title: "New attendancy",
+            title: "New attendance",
             role,
         });
     } catch (error) {
@@ -237,27 +258,33 @@ export async function getAddPresence(req, res, next) {
 }
 
 export async function postAddPresence(req, res, next) {
-    const students = req.body;
+    const presenceObj = req.body;
     let studentId;
     let presence;
+    let isMatin;
     // eslint-disable-next-line no-restricted-syntax
-    for (const i in students) {
-        studentId = +i;
-        presence = students[i];
+    for (const property in presenceObj) {
+        if (property !== "isMatin" && property !== "date") {
+            studentId = property;
+            presence = presenceObj[property];
+        }
 
-        if (isNaN(studentId)) break;
+        if (property == "isMatin") isMatin = presenceObj[property];
+
         try {
             // eslint-disable-next-line no-await-in-loop
-            await Presence.create({
-                studentId,
-                presence,
-                isMatin: students.isMatin,
-            });
+            if (studentId) {
+                await Presence.create({
+                    studentId,
+                    presence,
+                    isMatin,
+                });
+            }
         } catch (error) {
             const err = new Error(error);
             err.httpStatusCode = 500;
             return next(err);
         }
     }
-    res.redirect("/admin/");
+    res.redirect("/myaccount/summary");
 }

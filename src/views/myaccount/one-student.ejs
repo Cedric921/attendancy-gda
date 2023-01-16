@@ -1,4 +1,4 @@
-<%- include('../includes/head.ejs')%> <%- include('../includes/header.ejs')%>
+<%- include('../includes/header.ejs')%> <%- include('../includes/navigation.ejs')%>
 
 <div
   class="container-fluid h-100 w-100 d-flex flex-column justify-content-center align-items-center mb-2 p-5 bg-light"
@@ -49,7 +49,7 @@
     class="container shadow-sm card m-2 py-5 d-flex flex-column align-items-center justify-content-center"
   >
     <h5 class="text-danger w-100 text-center">Modifier les informations</h5>
-    <form method="POST" action="/admin/students/edit" class="p-4">
+    <form method="POST" action="/myaccount/students/edit" class="p-4">
       <div class="form-group mb-3">
         <label for="noms">Prenom</label>
         <input

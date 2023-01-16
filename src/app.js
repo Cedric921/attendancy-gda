@@ -11,11 +11,12 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import session from "express-session";
 import cookieParser from "cookie-parser";
+import flash from "connect-flash";
 import sendEmail from "./utils/email/sendEmail.js";
 
 // routes
-import adminRoutes from "./routes/admin.js";
-import appRouter from "./routes/index.js"
+// import adminRoutes from "./routes/admin.js";
+import appRouter from "./routes/index.js";
 
 // models
 import User from "./models/User.js";
@@ -81,6 +82,7 @@ app.use(
         saveUninitialized: false,
     })
 );
+app.use(flash());
 
 // templates views
 app.set("view engine", "ejs");
@@ -116,8 +118,7 @@ app.use(async (req, res, next) => {
     next();
 });
 
-app.use("/admin", adminRoutes);
-app.use(appRouter)
+app.use(appRouter);
 
 app.get("/500", getInternalError);
 app.use(getNotFound);
