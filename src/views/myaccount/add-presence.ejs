@@ -4,14 +4,14 @@
   class="login presence-section container-fluid w-100 h-100 pt-5 mb-5 d-flex justify-content-center align-items-start"
 >
   <div class="container mx-sm-1 mx-5">
-    <form action="/myaccount/add-presence" method="POST">
+    <form action="/myaccount/attendance/new" method="POST">
       <div
         class="d-flex flex-columns flex-sm-row w-100 justify-content-between flex-wrap align-items-sm-center align-items-end mt-3"
       >
         <h3
           class="text-center d-none d-sm-block align-start my-2 text-secondary"
         >
-          Faire la presence
+          Marquer la présence
         </h3>
         <p class="text-secondary m-0 d-none d-sm-block">
           <%= new Date().toLocaleString() %>
@@ -49,11 +49,11 @@
           <thead class="thead-light">
             <tr>
               <th class="text-danger text-center">#</th>
-              <th class="text-danger text-start" colspan="2">Noms</th>
-              <th class="text-danger text-center">Present</th>
-              <th class="text-danger text-center">R (justifié)</th>
-              <th class="text-danger text-center">A (justifié)</th>
-              <th class="text-danger text-center">A (non justifié)</th>
+              <th class="text-danger text-start" colspan="2">Etudiant</th>
+              <th class="text-danger text-center">Présent</th>
+              <th class="text-danger text-center">Retard</th>
+              <th class="text-danger text-center">Absent (justifié)</th>
+              <th class="text-danger text-center">Absent (non justifié)</th>
             </tr>
           </thead>
           <tbody>
@@ -102,11 +102,11 @@
           <tfoot>
             <tr>
               <th class="text-danger text-center">#</th>
-              <th class="text-danger text-center" colspan="2">noms</th>
+              <th class="text-danger text-start" colspan="2">Etudiant</th>
               <th class="text-danger text-center">Présent</th>
-              <th class="text-danger text-center">R (justifié)</th>
-              <th class="text-danger text-center">A (justifié)</th>
-              <th class="text-danger text-center">A (non justifié)</th>
+              <th class="text-danger text-center">Retard</th>
+              <th class="text-danger text-center">Absent (justifié)</th>
+              <th class="text-danger text-center">Absent (non justifié)</th>
             </tr>
           </tfoot>
         </table>

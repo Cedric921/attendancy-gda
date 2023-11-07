@@ -2,7 +2,7 @@ import { DataTypes } from "sequelize";
 
 import sequelize from "../db/config.js";
 
-const cohorte = sequelize.define("cohorte", {
+const Cohorte = sequelize.define("cohorte", {
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -13,11 +13,10 @@ const cohorte = sequelize.define("cohorte", {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    isCurrent: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-    },
 });
 
-export default cohorte;
+// util functions on cohorte model
+export const findClasses = Cohorte.findAll()
+export const createClass = name => new Cohorte({ nom: name }).save()
+
+export default Cohorte;

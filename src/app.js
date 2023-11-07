@@ -12,10 +12,8 @@ import morgan from "morgan";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import flash from "connect-flash";
-import sendEmail from "./utils/email/sendEmail.js";
 
 // routes
-// import adminRoutes from "./routes/admin.js";
 import appRouter from "./routes/index.js";
 
 // models
@@ -23,6 +21,7 @@ import User from "./models/User.js";
 import student from "./models/student.js";
 import presence from "./models/presence.js";
 import cohorte from "./models/cohorte.js";
+import StudentCohort from "./models/StudentCohort.js";
 // error controller
 // eslint-disable-next-line no-unused-vars
 import sequelize from "./db/config.js";
@@ -54,14 +53,28 @@ User.hasMany(student, {
 });
 student.belongsTo(User);
 
-cohorte.hasMany(student, {
-    onDelete: "RESTRICT",
-    onUpdate: "RESTRICT",
+/**
+ * Define relationship between 
+ * cohorte and Student_Cohort
+ */
+cohorte.hasMany(StudentCohort, {
+    onDelete: "CASCADE",
 });
-student.belongsTo(cohorte);
+StudentCohort.belongsTo(cohorte);
 
+/**
+ * Define relationship between student and Student_Cohort
+ */
+student.hasMany(StudentCohort, {
+    onDelete: 'CASCADE'
+})
+StudentCohort.belongsTo(student)
+
+/**
+ * Define relationship between student and presence
+ */
 student.hasMany(presence, {
-    onDelete: "RESTRICT",
+    onDelete: "CASCADE",
     onUpdate: "RESTRICT",
 });
 presence.belongsTo(student);
@@ -84,7 +97,7 @@ app.use(
 );
 app.use(flash());
 
-// templates views
+// register view engine
 app.set("view engine", "ejs");
 app.set("views", join(__dirname, "views"));
 
@@ -127,13 +140,5 @@ app.use((error, req, res) => {
     console.log({ message: error.message, stack: error.stack });
     res.redirect("/500");
 });
-
-// function to send automaticall eMail
-const autocall = () => {
-    sendEmail();
-};
-setInterval(() => {
-    autocall();
-}, 1000);
 
 export default app;

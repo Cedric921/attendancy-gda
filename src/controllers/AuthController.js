@@ -1,14 +1,11 @@
-import bcrypt from "bcryptjs";
 import { findUserByUsername } from "../models/User.js";
 import { comparePassword } from "../utils/helper.util.js";
-
-import userModel from "../models/User.js";
 
 export function form(req, res) {
     if (req.user) return res.redirect("/myaccount/summary");
 
     return res.render("auth/login", {
-        title: "Connexion",
+        title: "Bienvenue",
         userId: undefined,
     });
 }
@@ -29,9 +26,9 @@ export async function login(req, res, next) {
 
         if (user && verifiedPassword) {
             req.session.user = user;
+            req.body = user
             res.cookie("session", user);
 
-            console.log("la");
             return res.redirect("/myaccount/summary");
         }
     } catch (error) {
@@ -43,11 +40,7 @@ export async function login(req, res, next) {
 }
 
 export function logout(req, res) {
-    req.session.destroy();
-    res.cookie("session", undefined);
-    res.status(200).clearCookie("connect.sid", {
-        path: "/",
-    });
-
+    res.clearCookie("session");
+    
     res.redirect("/");
 }
